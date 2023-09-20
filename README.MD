@@ -2,8 +2,6 @@
 
 ## Getting Started
 
-## Available Scripts
-
 ### Running the development server.
 
 ```bash
