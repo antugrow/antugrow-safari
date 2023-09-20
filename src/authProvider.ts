@@ -1,84 +1,124 @@
 import { AuthBindings } from "@refinedev/core";
-import nookies from "nookies";
-
-const mockUsers = [
-  {
-    name: "John Doe",
-    email: "johndoe@mail.com",
-    roles: ["admin"],
-    avatar: "https://i.pravatar.cc/150?img=1",
-  },
-  {
-    name: "Jane Doe",
-    email: "janedoe@mail.com",
-    roles: ["editor"],
-    avatar: "https://i.pravatar.cc/150?img=1",
-  },
-];
+import {
+  ForgotPasswordFormValues,
+  LoginFormValues,
+  ResetPasswordFormValues,
+} from "./types/Forms";
+import { formatKenyanPhoneNumber } from "@/utils";
+import { signIn, signOut } from "next-auth/react";
+import { getServerSession } from "next-auth/next";
+import { nextAuthOptions } from "./lib/next-auth-options";
 
 export const authProvider: AuthBindings = {
-  login: async ({ email, username, password, remember }) => {
-    // Suppose we actually send a request to the back end here.
-    const user = mockUsers[0];
-
-    if (user) {
-      nookies.set(null, "auth", JSON.stringify(user), {
-        maxAge: 30 * 24 * 60 * 60,
-        path: "/",
+  login: async ({ phoneNo, password }: LoginFormValues) => {
+    try {
+      const resp = await signIn("credentials", {
+        phoneNo: formatKenyanPhoneNumber(phoneNo),
+        password,
+        redirect: false,
+        callbackUrl: "/dashboard",
       });
+
+
+      if (!resp.ok) {
+        return {
+          success: false,
+          error: {
+            name: "Auth Error",
+            message: resp.error,
+          },
+        };
+      }
+
+
       return {
         success: true,
-        redirectTo: "/",
+        redirectTo: "/dashboard",
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: {
+          name: "Auth Error",
+          message: err.message,
+        },
       };
     }
-
-    return {
-      success: false,
-      error: {
-        name: "LoginError",
-        message: "Invalid username or password",
-      },
-    };
   },
   logout: async () => {
-    nookies.destroy(null, "auth");
+    await signOut({
+      callbackUrl: "/auth/login",
+    });
     return {
       success: true,
-      redirectTo: "/login",
+      redirectTo: "/auth/login",
     };
   },
   check: async (ctx: any) => {
-    const cookies = nookies.get(ctx);
-    if (cookies["auth"]) {
+    const session = await getServerSession(ctx.req, ctx.res, nextAuthOptions);
+
+    if (!session) {
       return {
-        authenticated: true,
+        authenticated: false,
+        logout: true,
+        redirectTo: "/auth/login",
       };
     }
 
     return {
-      authenticated: false,
-      logout: true,
-      redirectTo: "/login",
+      authenticated: true,
+      identity: session.user,
     };
   },
   getPermissions: async () => {
-    const auth = nookies.get()["auth"];
-    if (auth) {
-      const parsedUser = JSON.parse(auth);
-      return parsedUser.roles;
-    }
-    return null;
+    
   },
   getIdentity: async () => {
-    const auth = nookies.get()["auth"];
-    if (auth) {
-      const parsedUser = JSON.parse(auth);
-      return parsedUser;
-    }
-    return null;
+    
   },
   onError: async (error) => {
     console.error(error);
     return { error };
+  },
+
+  forgotPassword: async ({ phoneNo }: ForgotPasswordFormValues) => {
+    try {
+     
+
+      return {
+        success: true,
+        redirectTo: "/auth/otp",
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: {
+          name: "ForgotPasswordError",
+          message: err.message,
+        },
+      };
+    }
+  },
+
+  updatePassword: async ({
+    phoneNo,
+    password,
+    confirmPassword: _confirm,
+  }: ResetPasswordFormValues) => {
+    try {
+     
+      return {
+        success: true,
+        redirectTo: "/auth/login",
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: {
+          name: "ResetPasswordError",
+          message: err.message,
+        },
+      };
+    }
   },
 };
