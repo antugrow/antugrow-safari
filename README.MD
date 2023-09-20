@@ -20,15 +20,6 @@
     npm run start
 ```
 
-## Learn More
-
-To learn more about **refine**, please check out the [Documentation](https://refine.dev/docs)
-
-- **REST Data Provider** [Docs](https://refine.dev/docs/core/providers/data-provider/#overview)
-- **Chakra UI** [Docs](https://refine.dev/docs/)
-- **Inferencer** [Docs](https://refine.dev/docs/packages/documentation/inferencer)
-- **Custom Auth Provider** [Docs](https://refine.dev/docs/core/providers/auth-provider/)
-- **i18n** [Docs](https://refine.dev/docs/core/providers/i18n-provider/)
 
 ## License
 
